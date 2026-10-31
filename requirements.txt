@@ -1,0 +1,7 @@
+# Exact training environment versions were not supplied.
+numpy
+pandas
+torch
+scipy
+matplotlib
+pyarrow

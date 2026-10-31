@@ -1,0 +1,11 @@
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.ipynb_checkpoints/
+klines.pkl
+seq_features.parquet
+runs/
+*.pt
+*.pth
+.DS_Store

@@ -1,0 +1,2 @@
+n_days,n_seeds,daily_diff_mean,daily_diff_std,hac_se,hac_p_two_sided,bootstrap_ci_low,bootstrap_ci_high,bootstrap_p,threshold_p_two_sided,positive_seeds,seed_diff_std,seed_diff_median
+242,10,0.007563276380312448,0.06542209118058624,0.007944900661197062,0.34111415656654875,-0.009230689461185625,0.02426161971717706,0.367,0.7590695656594382,6,0.020835029195676966,0.0003008616702320144
