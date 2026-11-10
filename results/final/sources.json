@@ -1,0 +1,24 @@
+{
+  "formal_gru.csv": [
+    "results/annual_summary.csv"
+  ],
+  "common_sample_models.csv": [
+    "results/experiments/compare_gru_ridge_2023/summary.csv",
+    "results/experiments/compare_gru_ridge_2024/summary.csv",
+    "results/experiments/compare_gru_ridge_2025/summary.csv"
+  ],
+  "common_sample_comparisons.csv": [
+    "results/experiments/compare_gru_ridge_2023/comparison.csv",
+    "results/experiments/compare_gru_ridge_2024/comparison.csv",
+    "results/experiments/compare_gru_ridge_2025/comparison.csv"
+  ],
+  "ridge_crossyear.csv": [
+    "results/experiments/ridge_crossyear_fixed/annual_summary.csv"
+  ],
+  "A_2023.csv": [
+    "results/experiments/experiment_A_csrank/test_2023/comparison.csv"
+  ],
+  "window_validation.csv": [
+    "results/experiments/window_diagnostic_valid2023_rank/comparison.csv"
+  ]
+}

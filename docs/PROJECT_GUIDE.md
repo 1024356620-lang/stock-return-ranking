@@ -1,46 +1,103 @@
-# 本地项目整理与历史说明
+# 数据与运行指南
 
-## 使用整理包
+## 1. 环境
 
-推荐先解压到新文件夹检查，再将正式脚本、README、requirements.txt、.gitignore、docs及results复制到原项目。不要删除或覆盖原来的klines.pkl、seq_features.parquet和runs目录。本包不含这些大型产物。
-
-原训练脚本保持在根目录，其ROOT由脚本位置推导；不要直接移入scripts子目录。_crossyear_data.py及run_crossyear.py按原字节复制，以保留既有manifest中的代码指纹；不要因整理而重排代码或换行。
-
-已有run_stage4.py为修正版3种子入口，继续保留在本地即可；整理包以run_stage4_10seeds.py作为正式入口，未重复打包旧入口。已有compare_stage4.py同样可保留，但最终结果使用10种子比较。
-
-旧paired_compare.py、paired_compare_v2.py、paired_compare_v3.py仅作历史版本；正式第三阶段入口为paired_compare_final.py。旧runs/stage4为退化排序损失实验，不能用于正式结论。无需删除旧文件，也不要再次运行旧入口覆盖结果。
-
-## 历史阶段命令
+在仓库根目录安装依赖：
 
 ```bash
-python run_stage1.py
-python run_stage2.py
-python run_stage2.py --shuffle
-python run_stage3.py
-python run_stage3b.py
-python rebuild_stage2_daily_ic.py
-python paired_compare_final.py
+python -m pip install -r requirements.txt
 ```
 
-这些命令可能重训或重写对应阶段产物，仅在需要复现实验时运行。
+训练使用CPU。核心依赖为numpy、pandas、torch、scipy、matplotlib、pyarrow。依赖版本未精确锁定；跨环境可能存在数值差异。
 
-## 运行结果与静态结果
+## 2. 导入已有数据
 
-2023正式运行在runs/stage4_fixed，汇总为summary_10seeds.csv；比较结果在runs/stage4_fixed_compare_10seeds。
-2024/2025运行在runs/stage5_crossyear/test_YEAR，比较结果在该目录comparison下。
-本包results/YEAR保存用户上传、已核验的CSV快照。训练脚本不会直接读取或覆盖results快照。新实验完成并核验后才手动替换快照。
+推荐直接使用已有特征缓存，避免重复构建：
 
-2023未收到20次训练的完整summary_10seeds.csv，故该年目录不伪造training_summary.csv；其模型均值来自seed_summary.csv和逐日文件。2024/2025已附原训练汇总。
+```bat
+python project.py data --features "C:\path\to\ml\seq_features.parquet"
+```
 
-## Git整理
+命令会检查字段、重复股票日期、标签结束日期及无穷值，并复制为仓库根目录的seq_features.parquet。这个检查不验证股票池、复权或所有特征的因果正确性。
 
-.gitignore忽略本地原始数据、特征缓存、runs、权重、Python缓存；results中的轻量CSV会保留。忽略规则不会自动移除已经被Git跟踪的文件。先使用git status检查，再明确暂存需要发布的文件，不要盲目git add全部数据。
+也可以手动把seq_features.parquet复制到与project.py同级的位置，不要放入scripts/。数据导入不覆盖目标；如需更新数据，先备份旧文件再移除它。
 
-未设置远程地址或执行提交、推送；本包不假定用户已有ML仓库URL。未添加许可证，因为代码及数据的发布许可需由所有者确定。
+仅有原始行情时：
 
-## 报告措辞
+```bat
+python project.py data --klines "C:\path\to\ml\klines.pkl"
+python project.py build-features
+```
 
-可以写：实现GRU序列建模、排序损失及公平对照；修复退化目标；用10个随机种子与年度滚动评估检验稳健性；使用HAC和分块bootstrap进行配对分析。
-不能写：排序损失显著优于MSE、跨年稳定有效、实现稳定超额收益。最终三个年份的逐日增量检验均不显著。
+klines.pkl为字典：键是股票代码，值是pandas DataFrame。使用date、close、high、low、volume、amount、turn字段；date可转为日期，其余为数值列。仅反序列化可信来源的pickle。build-features只构建缓存，不训练模型。
 
-未完成研究不应借“项目整理”补成既成事实：原始数据来源及股票池偏差审计、逐股票样本对账、精确环境锁定、实盘成本评估均有待独立工作。
+缓存字段：code、date、flag_tradable、label_fwd5_ret、label_end、ret_1d、ma5_dev、ma20_dev、log_vol_ratio、turnover、amplitude、vol_20d。日历、标签和缺失处理口径见README。
+
+特征缓存存在时，训练脚本优先使用它，不会自动根据新klines.pkl刷新。更换数据应先备份旧缓存并明确重建。不要把旧数据对应的runs缓存与新数据混用。
+
+## 3. 查看已发布结果
+
+```bash
+python project.py list
+python project.py report
+python project.py verify
+```
+
+这些命令不需要行情、预测文件或权重。verify从results/复算已有逐日IC的汇总、配对关系和HAC；不是从原始行情重建结果。results/final/sources.json记录每张最终表的来源。
+
+## 4. 复现正式GRU实验
+
+以下命令会训练模型，输出至本地runs/：
+
+```bash
+python project.py run run_stage4_10seeds
+python project.py run compare_stage4_10seeds
+python project.py run run_crossyear --years 2024 2025
+python project.py run compare_crossyear --year 2024
+python project.py run compare_crossyear --year 2025
+```
+
+2023输出为runs/stage4_fixed；2024/2025输出为runs/stage5_crossyear/test_YEAR。完整运行保存checkpoint.pt、predictions.parquet、history.csv、daily_ic.csv等文件。
+
+数据或代码改变后使用全新runs目录/独立工程副本，避免旧缓存混入。不要手改manifest绕过不匹配检查。未保存完整预测时，完成标记不代表可以直接续用。
+
+## 5. 简单基线与特征诊断
+
+```bash
+python project.py run run_ridge_diagnostic
+python project.py run run_feature_diagnostic
+python project.py run run_ridge_crossyear
+```
+
+前两项使用2020—2021训练、2022验证；第三项固定lambda=10，比较7特征Ridge、删除振幅的6特征Ridge及负换手率。数据划分与原GRU年度训练范围对应，间隔年不用于重新调参。
+
+这些脚本遇到已有输出目录会拒绝覆盖；新实验可使用--out指定新目录。评价年份已经参与历史研究，结果按探索性报告。
+
+## 6. 特征拼接与训练窗口实验
+
+```bash
+python project.py run run_experiment_A --years 2023 --out runs/A_new
+python project.py run run_window_diagnostic --out runs/window_new
+```
+
+A比较原始7特征与附加7个截面排名特征。窗口实验默认rank损失、3种子、验证2023，对比训练2020—2022与2021—2022。验证集同时用于早停与对照，因此不构成独立测试。
+
+## 7. 同样本比较
+
+需要先生成Ridge与GRU逐股票预测。默认读取runs中的本地结果，已发布汇总则在results/experiments中：
+
+```bash
+python project.py run compare_gru_ridge --year 2024
+python project.py run compare_gru_ridge --year 2025
+python project.py run compare_gru_ridge --year 2023 --gru-root runs/experiment_A_csrank/test_2023/baseline
+```
+
+2023若使用上述A实验的其他输出路径，--gru-root也需相应调整。若使用旧stage4的242日预测，脚本将取共同样本；来源与配置应在报告中说明，不能假设它与A重跑逐位一致。
+
+脚本默认要求MSE和rank各10种子齐全，按共同股票/日期核对标签后重算IC。增量为GRU减基线。GRU先算各seed逐日IC再平均，不是预测集成IC。
+
+## 8. Git提交范围
+
+提交README、project.py、scripts、docs、requirements.txt、.gitignore与results。原始数据、runs、权重、逐股票预测由.gitignore排除；不要强制添加这些文件。
+
+首次克隆后，已发布结果可直接核验。训练重现需要另行提供合适的数据来源与权限。原始行情由使用者按数据来源许可自行提供，不随仓库分发。

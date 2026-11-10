@@ -1,0 +1,17 @@
+﻿id,status,scripts,result_path,notes
+formal2023,完成：10种子,run_stage4_10seeds.py / compare_stage4_10seeds.py,results/2023,2023为探索性；242日；最终结论取10种子，不取旧3种子
+formal2024,完成：10种子,run_crossyear.py / compare_crossyear.py,results/2024,冻结年度滚动方案；已查看区间不再称独立盲测
+formal2025,完成：10种子,run_crossyear.py / compare_crossyear.py,results/2025,2025两组IC接近零
+common2023,完成：同样本比较,compare_gru_ridge.py,results/experiments/compare_gru_ridge_2023,237日；GRU来自A实验baseline，不是旧242日表
+common2024,完成：同样本比较,compare_gru_ridge.py,results/experiments/compare_gru_ridge_2024,保存逐日IC和覆盖率，逐股票预测由本地运行生成
+common2025,完成：同样本比较,compare_gru_ridge.py,results/experiments/compare_gru_ridge_2025,全部增量检验不显著
+A2023,完成：40次训练,run_experiment_A.py,results/experiments/experiment_A_csrank/test_2023,MSE和rank各10种子，两种特征；排名拼接未改善
+ridge_valid,完成：开发诊断,run_ridge_diagnostic.py,results/experiments/ridge_diagnostic_valid2022,2022验证选lambda，有选模偏差
+feature_valid,完成：开发诊断,run_feature_diagnostic.py,results/experiments/feature_diagnostic_valid2022,固定lambda=10；筛选删除振幅；不代表独立评估
+ridge_years,完成：跨年探索,run_ridge_crossyear.py,results/experiments/ridge_crossyear_fixed,固定三方案；删除振幅逐年改善Ridge
+window,完成：6次训练,run_window_diagnostic.py,results/experiments/window_diagnostic_valid2023_rank,验证2023；3种子；近期窗口无平均改善
+stage1,历史：流程检查,run_stage1.py,results/stage1,单seed，不与正式实验混用
+stage2,历史：结构探索,run_stage2.py,results/stage2,MLP/GRU；训练采样和选模规则与正式对照不同
+stage2_shuffle,历史：时间扰动,run_stage2.py --shuffle,results/stage2_shuffled,描述性实验，不证明时序无用
+stage3_attn,历史：结构探索,run_stage3.py,results/stage3_attention,Attention
+stage3_pool,历史：结构探索,run_stage3b.py,results/stage3_pool,Mean Pooling

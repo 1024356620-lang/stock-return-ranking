@@ -1,14 +1,7 @@
-# run_stage2.py
-# 相对 v1 的改动：
-#   1. 用 --shuffle 命令行参数替代 SHUFFLE_TIME 环境变量
-#   2. 正常 / 打乱 输出到 runs/stage2/ 和 runs/stage2_shuffled/，不覆盖
-#   3. 训练标签标准化（用训练集 mean/std 拟合），评估时恢复原始量纲
-#   4. 早停 patience: 5 -> 10
-#   5. checkpoint 里同时存 y_mu / y_std
-#
-# 用法：
-#   python run_stage2.py             # 正常序列 -> runs/stage2/
-#   python run_stage2.py --shuffle   # 时间打乱 -> runs/stage2_shuffled/
+"""年度滚动实验的数据处理与模型定义。特征缓存和原始行情位于项目根目录。
+
+数据格式、参数和运行方法见 docs/PROJECT_GUIDE.md。
+"""
 
 import os, time, argparse, pickle
 from pathlib import Path
@@ -26,7 +19,7 @@ import matplotlib.pyplot as plt
 # ============================================================
 # 1. 配置
 # ============================================================
-ROOT = Path(__file__).resolve().parent
+ROOT = Path(__file__).resolve().parent.parent
 KLINES_PATH = ROOT / "klines.pkl"
 SEQ_PATH    = ROOT / "seq_features.parquet"
 
@@ -43,12 +36,12 @@ CFG = dict(
     mlp_hidden=256, gru_hidden=64,
     dropout=0.2, batch_size=512,
     lr=1e-3, weight_decay=1e-4,
-    epochs=50, patience=10,     # ← patience 5 -> 10
+    epochs=50, patience=10,     # 早停耐心轮数设为10。
     grad_clip=1.0, seed=0,
 )
 SEEDS = [0, 1, 2]
 
-# 运行时容器（避免 global 变量）
+# 运行时容器（避免全局变量）
 RT = {"shuffle": False, "out_base": ROOT / "runs" / "stage2"}
 
 
@@ -98,7 +91,7 @@ def fit_scaler(daily, s, e):
 
 
 def make_windows(daily, mu, sd):
-    """窗口末日（t 日）必须 flag_tradable==1；窗口内部保留停牌行，用 ffill 处理"""
+    """窗口末日（t 日）必须 flag_tradable==1；窗口内部保留停牌行，用前向填充处理"""
     X_list, y_list, dates, codes, ends = [], [], [], [], []
     for code, g in daily.groupby("code", sort=False):
         g = g.reset_index(drop=True)
@@ -287,7 +280,7 @@ def run_one(model_name, seed, X_all, y_all, meta, mu, sd):
     m_va = meta[va_mask].reset_index(drop=True)
     m_te = meta[te_mask].reset_index(drop=True)
 
-    # 可选：时间打乱（每个 run 用同一个 rng 种子 0，保证可复现）
+    # 可选：时间打乱（每次运行使用相同的随机数种子 0，保证可复现）
     if RT["shuffle"]:
         rng = np.random.default_rng(0)
         def shuffle_time(X):
@@ -328,7 +321,7 @@ def run_one(model_name, seed, X_all, y_all, meta, mu, sd):
         rows.append(report(name, p_raw, y_raw, m))
     pd.DataFrame(rows).to_csv(out_dir / "metrics.csv", index=False)
 
-    # 完整 checkpoint
+    # 完整模型检查点
     torch.save({
         "state_dict": model.state_dict(),
         "features": FEATURES, "window": WINDOW,
@@ -368,7 +361,7 @@ def run_one(model_name, seed, X_all, y_all, meta, mu, sd):
 
 
 # ============================================================
-# 6. main
+# 6. 主入口
 # ============================================================
 def main(shuffle_time):
     RT["shuffle"] = shuffle_time

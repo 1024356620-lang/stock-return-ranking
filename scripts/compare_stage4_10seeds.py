@@ -1,16 +1,14 @@
-# ============================================================
-# compare_stage4.py
-# Stage 4: mse vs rank 的逐日配对比较
-# 修正口径: 逐日 -> HAC(n) -> block bootstrap -> 阈值检验
-# 只有 1 对比较，不需要 Holm
-# 用法: python compare_stage4.py
-# ============================================================
+"""汇总2023年十种子的学习目标对照，并进行逐日配对检验。
+
+数据格式、参数和运行方法见 docs/PROJECT_GUIDE.md。
+"""
+
 import numpy as np
 import pandas as pd
 from pathlib import Path
 from scipy import stats
 
-ROOT = Path(__file__).resolve().parent
+ROOT = Path(__file__).resolve().parent.parent
 DIR  = ROOT / "runs" / "stage4_fixed"
 
 SEEDS = list(range(10))

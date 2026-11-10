@@ -1,11 +1,23 @@
+# 本地数据和实验缓存
+/klines.pkl
+/seq_features.parquet
+/runs/
+/data/
+*.pkl
+*.pickle
+*.parquet
+*.pt
+*.pth
+*.npz
+# Python环境与缓存
 __pycache__/
 *.py[cod]
 .venv/
 venv/
-.ipynb_checkpoints/
-klines.pkl
-seq_features.parquet
-runs/
-*.pt
-*.pth
+.env
+.env.*
+# 编辑器及系统文件
+.vscode/
+.idea/
 .DS_Store
+Thumbs.db

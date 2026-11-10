@@ -1,14 +1,7 @@
-# run_stage4_10seeds.py
-# GRU + mean pooling:
-#   1. 标准化收益 MSE
-#   2. 同日 pairwise logistic ranking
-#
-# 两组统一：
-#   模型初始化、每日股票抽样、日期顺序、优化器、
-#   验证 Rank IC 早停、学习率调度、最大训练轮数。
-#
-# 依赖同目录 run_stage2.py 的数据构建和配置。
-# 输出到 runs/stage4_fixed，不覆盖此前实验。
+"""2023年十种子正式对照：GRU均值池化，MSE与成对排序目标。
+
+数据格式、参数和运行方法见 docs/PROJECT_GUIDE.md。
+"""
 
 import json
 import time
@@ -44,7 +37,7 @@ CONFIG.update({
     "predict_batch_size": 1024,
 })
 
-# 使用CPU，与前面阶段保持一致。
+# 使用CPU运行。
 DEVICE = torch.device("cpu")
 
 
@@ -71,7 +64,7 @@ class GRUPool(nn.Module):
 
 
 class DailySampler:
-    """每轮每个日期出现一次；两组同seed、同epoch使用相同样本。"""
+    """每轮每个日期出现一次；两组相同随机种子、相同训练轮次使用相同样本。"""
 
     def __init__(self, meta, max_size, min_stocks, seed):
         self.max_size = max_size
@@ -100,7 +93,7 @@ class DailySampler:
 
 
 def pairwise_logistic_loss(pred, target):
-    """同日所有非并列标签对的平均logistic损失。"""
+    """同日所有非并列标签对的平均逻辑排序损失。"""
     pred = pred.reshape(-1)
     target = target.reshape(-1)
 
